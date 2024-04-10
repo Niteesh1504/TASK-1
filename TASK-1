@@ -1,0 +1,78 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+import React, { useState } from 'react';
+import axios from 'axios';
+function App() {
+  const [channels, setChannels] = useState([]);
+  const [selectedChannel, setSelectedChannel] = useState('general');
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
+  const getChannels = async () => {
+    const response = await axios.get('/api/channels');
+    setChannels(response.data);
+  };
+  const getMessages = async () => {
+    const response = await axios.get(/api/channels/${selectedChannel}/messages);
+    setMessages(response.data);
+  };
+  const sendMessage = async () => {
+    const response = await axios.post('/api/messages', {
+      channel: selectedChannel,
+      content: messageInput
+    });
+    setMessages([...messages, response.data]);
+    setMessageInput('');
+  };
+  return (
+    <div id="root">
+      <div id="channels">
+        <h2>Channels</h2>
+        {channels.map((channel) => (
+          <button key={channel} onClick={() => handleChannelSelect(channel)}>{channel}</button>
+        ))}
+      </div>
+      <div id="messages">
+        <h2>{selectedChannel}</h2>
+        {messages.map((message) => (
+          <div key={message.id}>
+            <strong>{message.author}:</strong> {message.content}
+          </div>
+        ))}
+      </div>
+      <div id="message-input">
+        <input value={messageInput} onChange={(e) => setMessageInput(e.target.value)} />
+        <button onClick={sendMessage}>Send</button>
+      </div>
+    </div>
+  );
+}
+export default App;
+const express =require('express');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+app.use(express.static('build'));
+    socket.on('join', (channel) => {
+    socket.join(channel);
+    socket.emit('messages', messages.filter(message => message.channel === channel));
+  });
+  socket.on('message', ({ channel, author, content }) => {
+    const message = { channel, author, content, timestamp: new Date() };
+    messages.push(message);
+    socket.to(channel).emit('message', message);
+  });
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+const PORT = process.env.PORT || 3001;
+http.listen(PORT, () => {
+  console.log(Server is running on port ${PORT});
+});
